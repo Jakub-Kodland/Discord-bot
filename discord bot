@@ -1,0 +1,44 @@
+require('dotenv').config();
+const { Client, GatewayIntentBits, Events } = require('discord.js');
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+
+// Command handler
+const prefix = '!';
+const commands = {
+    ping: {
+        description: 'Replies with Pong!',
+        execute: (message) => message.channel.send('Pong!'),
+    },
+    greet: {
+        description: 'Greets the user!',
+        execute: (message) => message.channel.send(`Hello, ${message.author.username}!`),
+    },
+    help: {
+        description: 'Lists all commands.',
+        execute: (message) => {
+            const commandList = Object.keys(commands).map(cmd => `${prefix}${cmd} - ${commands[cmd].description}`).join('\n');
+            message.channel.send(`Available commands:\n${commandList}`);
+        },
+    },
+};
+
+// Event listeners
+client.once(Events.ClientReady, () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+});
+
+client.on(Events.MessageCreate, message => {
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    if (commands[command]) {
+        commands[command].execute(message, args);
+    } else {
+        message.channel.send('Unknown command. Type !help for a list of commands.');
+    }
+});
+
+// Login to Discord with your app's token
+client.login(process.env.DISCORD_TOKEN);
